@@ -21,27 +21,28 @@
 The main script `tagger.py` is responsible for training and testing the neural POS tagger in one fell swoop. However, it should be straightforward to split the training and testing phases, if needed.
 
 Please note that the current published version requires the fully/partially annotated data as an input. The repo will be updated to add the code for cross-lingual POS alignment soon!
+<br/>
 
-####Main Script: tagger.py
+###Main Script: tagger.py
 
-##### Parameters
--  **target_language**: The ISO3 code of the target language
--  **source_language**: The ISO3 code of the target language
-- **data_path**: The path of the training and testing data (directory)
-- **output_path**: The path of the final tagged output (directory)
-- **model_path**: The path of the final model (directory)
-- **training_data_set**: The name of the training dataset
-- **test_data_sets**: The name(s) of the test dataset(s), comma-separated
-- **training_size**: the number of words to train one, -1 = all
-- **max_sentence_length**: the maximum sentence length (in words) to train one, -1 = all
+#### Parameters
+-  **target_language**: the ISO3 code of the target language
+-  **source_language**: the ISO3 code of the source language
+- **data_path**: the path of the training and testing data (directory)
+- **output_path**: the path of the final tagged output (directory)
+- **model_path**: the path of the final model (directory)
+- **training_data_set**: the name of the training dataset
+- **test_data_sets**: the name(s) of the test dataset(s), comma-separated
+- **training_size**: the number of words to train on, -1 = all
+- **max_sentence_length**: the maximum sentence length (in words) to train on, -1 = all
 - **min_density**: the percentage of partially tagged words to the number of words in a sentence to train on, -1 = all
-- **use_word_embeddings**: boolean: whether to use randomly initializedword  embeddings.
-- **use_affix_embeddings**: whether to use randomly initialized prefix/suffix (of lengths 1, 2, 3 and 4) embeddings.
-- **use_char_embeddings**: whether to use character embeddings
-- **use_brown_clusters**: whether to use brown clusters
-- **brown_cluster_path**: the path of brown clusters
-- **use_contextual_embeddings**: whether to use contextual embeddings (e.g., BERT or XLM)
-- **contextual_embeddings_dimensions**: size of the embedding dimensions.
+- **use_word_embeddings**: boolean: whether to use randomly initialized word  embeddings (recommended)
+- **use_affix_embeddings**: whether to use randomly initialized prefix/suffix (of lengths 1, 2, 3 and 4) embeddings (recommended).
+- **use_char_embeddings**: whether to use character embeddings (not recommended)
+- **use_brown_clusters**: whether to use Brown clusters (recommended)
+- **brown_cluster_path**: the path of Brown clusters
+- **use_contextual_embeddings**: whether to use contextual embeddings (e.g., BERT or XLM) (recommended)
+- **contextual_embeddings_dimensions**: vector size for contextual embeddings
 - **contextual_embedding_path**: the path of the contextual embedding vevtors.  Each sentence should occypy n+1 lines. The first line contains the space-separated tokenized text, while the nth line contains the comma separated embeddings values of the (n-1)th token (e.g., 0.2, 0.3, -.0.6....).
 - **contextual_tokenization_path**: the path olf the tokenization file, a tabular file of two columns
 - **subword_combination_method**: how to combine the embeddings of subwords; the values are: AVERAGE, FIRST, FIRST_LAST and LONGEST.
