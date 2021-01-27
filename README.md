@@ -43,7 +43,7 @@ Please note that the current published version requires the fully/partially anno
 - **brown_cluster_path**: the path of Brown clusters
 - **use_contextual_embeddings**: whether to use contextual embeddings (e.g., BERT or XLM) (recommended)
 - **contextual_embeddings_dimensions**: vector size for contextual embeddings
-- **contextual_embedding_path**: the path of the contextual embedding vevtors.  Each sentence should occupy n+1 lines. The first line contains the space-separated tokenized text, while the nth line contains the comma-separated vector of the (n-1)th token (e.g., 0.2, 0.3, -.0.6....).
+- **contextual_embedding_path**: the path of the precomputed contextual embeddings (see the description under the *Notes* section)
 - **contextual_tokenization_path**: the path of the tokenization file, a tabular file of two columns: words and space-separated tokens
 - **subword_combination_method**: how to combine the embeddings of subwords; the values are: *AVERAGE*, *FIRST*, *FIRST_LAST* and *LONGEST* (recommended: *FIRST_LAST*)
 - **epochs**: number of epochs (recommended: 12)
@@ -56,6 +56,11 @@ Please note that the current published version requires the fully/partially anno
 
 #### Notes
 - The system assumes all the contextual embeddings are precomputed. However, it is straightforward to change this into runtime computations, if needed.
+- In the embeddings file, each sentence should occupy n+2 lines. The first line contains the white-separated tokenized text; the second line contains a vector of subwords or subword IDs, while the *(n+2)th* line contains the comma-separated vector of the *nth* token.
+Example
+`Eta haur eçagut cedin Ioppe gucian eta sinhets ceçaten anhitzec Iauna baithan .<br/>
+['[CLS]', 25623, 56155, 28, 2968, 13306, 405, 3035, 28136, 7340, 2497, 69438, 522, 3811, 7831, 405, 2968, 510, 3616, 24374, 3240, 12044, 1946, 63670, 1121, 6, 5, '[SEP]']<br/>
+0.6276292204856873, -0.8384165167808533, 0.6102157235145569, -0.2547730505466461, -0.45138606429100037,.....`
 - The training dataset should be named as *(target_language)-(source_language)-POSUD-(training_data_set).txt*, e.g., *EUS-ENG-POSUD-TRAIN.txt*.
 - The test dataset(s) should be named as  *(target_language)-(source_language)-POSUD-(test_data_sets).txt*, e.g., *EUS-ENG-POSUD-TEST.txt*.
 - The training and testing datasets should have one sentence per line, where each word is represented as *word_POS*, and empty tags are marked as \*\*\*. 
