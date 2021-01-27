@@ -5,6 +5,7 @@ from vocab_processing import *
 
 HELDOUT_PERCENTAGE = 10
 
+# Read the datasets for training and testing.
 def read_data(train, target_language, source_language, data_path, data_set, training_size, max_sentence_length, min_density, hold_out):
     data_path = get_data_file_path(train, target_language, source_language, data_path, data_set)
     content = []
@@ -45,6 +46,7 @@ def read_data(train, target_language, source_language, data_path, data_set, trai
 
     return content, held_out_content
 
+# Construct the data path.
 def get_data_file_path(train, target_language, source_language, data_path, data_set):
     if train:
         return data_path + '/' + target_language + '-' + source_language + '-POSUD-' + data_set + '.txt'

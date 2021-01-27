@@ -6,6 +6,10 @@ import re
 
 import numpy as np
 
+###############
+# CONSTANTS
+###############
+
 PAD = "__PAD__"
 UNK = "__UNK__"
 BLANK = '***'
@@ -63,6 +67,8 @@ UD_PETROV_TAGS['X'] = 'X'
 
 class Vocab:
     def __init__(self, train, tune, tests):
+
+        # Read the words and tags, and create the corresponding maps.
 
         data = train + tune
         for test in tests:
@@ -145,12 +151,14 @@ class Vocab:
         
         self.output_tag_dict = {tag: i for i, tag in enumerate(self.output_tags)}
 
+        # Extract the training vocabulary.
         print("Extracting training vocabulary...")
         self.in_vocab = set()
         for token_list, _ in train:
             for i in range(len(token_list)):
                 self.in_vocab.add(simplify_token(token_list[i]))
 
+        # Calculate the transition matrix (not currently used).
         print("Calculating transition matrix...")
         self.transitions = [[0 for x in range(len(self.output_tags))] for y in range(len(self.output_tags))]
         total = 0
@@ -165,6 +173,7 @@ class Vocab:
             for j in range(len(self.transitions[i])):
                 self.transitions[i][j] = 0 if summ[i] == 0 else self.transitions[i][j] / summ[i]
 
+        # Calculate the type constraints (not currently used).
         print("Getting type constraints...")
         self.token_tags = {}
         for token_list, tag_list in train:
@@ -266,6 +275,7 @@ class Vocab:
     def is_IV(self, token):
         return token in self.in_vocab
 
+    # Extract the features for a given token.
     def get_features(self, token):
         if token == START_MARKER:
             return START_MARKER, START_MARKER, START_MARKER, START_MARKER, START_MARKER, START_MARKER, START_MARKER, START_MARKER, START_MARKER, [START_MARKER for i in range(self.max_length)]
@@ -286,6 +296,7 @@ class Vocab:
             chars.append(PAD)
         return token, prefix1, prefix2, prefix3, prefix4, suffix1, suffix2, suffix3, suffix4, chars
 
+    # Postprocess the tags (some linguistics here...)
     def postprocess_tags(self, tags, tokens):
         postprocessed_tags = []
         for i in range(len(tokens)):
@@ -310,6 +321,7 @@ class Vocab:
             postprocessed_tags.append(int(self.tag2id(postprocessed_tag_label)))
         return postprocessed_tags
 
+    # Fix the tags for the underlying language following the UD annotations.
     def fix_tag(self, target_language, predicted_tag, test_data_set):
         predicted_tag_label = self.id2tag(predicted_tag)
         if target_language == 'AFR':
@@ -378,6 +390,7 @@ class Vocab:
         predicted_tag_label = self.id2tag(predicted_tag)
         return self.tag2id(UD_PETROV_TAGS[predicted_tag_label]) if predicted_tag_label in UD_PETROV_TAGS else predicted_tag
 
+# Simply a given token by replacing the digits/numbers with zeros.
 def simplify_token(token):
     chars = []
     for char in token:
