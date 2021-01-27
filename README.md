@@ -23,9 +23,9 @@ The main script `tagger.py` is responsible for training and testing the neural P
 Please note that the current published version requires the fully/partially annotated data as an input. The repo will be updated to add the code for cross-lingual POS alignment soon!
 <br/>
 
-###Main Script: tagger.py
+#### Main Script: tagger.py
 
-####Parameters
+##### Parameters
 -  **target_language**: the ISO3 code of the target language
 -  **source_language**: the ISO3 code of the source language
 - **data_path**: the path of the training and testing data (directory)
@@ -54,7 +54,7 @@ Please note that the current published version requires the fully/partially anno
 - **run_postprocessing**: whether to force the tagging of punctuation marks, symbols and numbers in the output
 - **overwrite_by_output**: whether to  use the tags in the test dataset(s) (e.g., when partially annotated) to overwrite the system output
 
-####Notes
+#### Notes
 - The system assumes all the contextual embeddings are precomputed. However, it is straightforward to change this into runtime computations, if needed.
 - The training dataset should be named as *(target_language)-(source_language)-POSUD-(training_data_set).txt*, e.g., *EUS-ENG-POSUD-TRAIN.txt*.
 - The test dataset(s) should be named as  *(target_language)-(source_language)-POSUD-(test_data_sets).txt*, e.g., *EUS-ENG-POSUD-TEST.txt*.
