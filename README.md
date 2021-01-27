@@ -58,10 +58,10 @@ Please note that the current published version requires the fully/partially anno
 - The system assumes all the contextual embeddings are precomputed. However, it is straightforward to change this into runtime computations, if needed.
 - The training dataset should be named as *(target_language)-(source_language)-POSUD-(training_data_set).txt*, e.g., *EUS-ENG-POSUD-TRAIN.txt*.
 - The test dataset(s) should be named as  *(target_language)-(source_language)-POSUD-(test_data_sets).txt*, e.g., *EUS-ENG-POSUD-TEST.txt*.
-- The training and testing datasets should have one sentence per line, where each word is represented as *word_POS*, and empty tags are marked as \*\*\*. <br/>
+- The training and testing datasets should have one sentence per line, where each word is represented as *word_POS*, and empty tags are marked as \*\*\*. 
 Example:  `Deur_ADP saam_*** te_PART werk_VERB ,_PUNCT kan_*** ons_PRON meer_DET bereik_VERB ._PUNCT`
 - We use the output of the Brown-Clustering implementation [here](http://https://github.com/percyliang/brown-cluster "here").
-- We support the following set of languages for the postprocessing: *AFR*, *AMH*, *BUL*, *EUS*, *FIN*, *HIN*, *IND*, *JPN*, *LIT*, *PER*, *POR*, *TEL*, *TUR*
+- We support the following set of languages for the postprocessing: *AFR*, *AMH*, *BUL*, *EUS*, *FIN*, *HIN*, *IND*, *JPN*, *LIT*, *PER*, *POR*, *TEL* and *TUR*.
 - We support the UD POS tags.
 
  
