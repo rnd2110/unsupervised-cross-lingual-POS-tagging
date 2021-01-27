@@ -47,9 +47,6 @@ def read_data(train, target_language, source_language, data_path, data_set, trai
 
 def get_data_file_path(train, target_language, source_language, data_path, data_set):
     if train:
-        if source_language != target_language:
-            return data_path + '/' + target_language + '-' + source_language + '-bible-POSUD-' + data_set + '.txt'
-        else:
-            return data_path + '/' + target_language + '-UD-POSUD-' + data_set + '.txt'
+        return data_path + '/' + target_language + '-' + source_language + '-POSUD-' + data_set + '.txt'
     else:
-        return data_path + '/' + target_language + '-UD-POSUD-' + data_set + '.txt'
+        return data_path + '/' + target_language + '-POSUD-' + data_set + '.txt'
