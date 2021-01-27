@@ -25,7 +25,7 @@ Please note that the current published version requires the fully/partially anno
 
 #### Main Script: tagger.py
 
-##### Parameters
+#### Parameters
 -  **target_language**: the ISO3 code of the target language
 -  **source_language**: the ISO3 code of the source language
 - **data_path**: the path of the training and testing data (directory)
