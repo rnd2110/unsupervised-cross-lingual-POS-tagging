@@ -45,13 +45,13 @@ Please note that the current published version requires the fully/partially anno
 - **contextual_embeddings_dimensions**: vector size for contextual embeddings
 - **contextual_embedding_path**: the path of the contextual embedding vevtors.  Each sentence should occupy n+1 lines. The first line contains the space-separated tokenized text, while the nth line contains the comma-separated vector of the (n-1)th token (e.g., 0.2, 0.3, -.0.6....).
 - **contextual_tokenization_path**: the path of the tokenization file, a tabular file of two columns: words and space-separated tokens
-- **subword_combination_method**: how to combine the embeddings of subwords; the values are: *AVERAGE*, *FIRST*, *FIRST_LAST* and *LONGEST* (recommended: *FIRST_LAST*).
+- **subword_combination_method**: how to combine the embeddings of subwords; the values are: *AVERAGE*, *FIRST*, *FIRST_LAST* and *LONGEST* (recommended: *FIRST_LAST*)
 - **epochs**: number of epochs (recommended: 12)
 - **learning_rate**: learning rate (ecommended: 0.0001)
 - **learning_decay_rate**: learning decay rate (recommended: 0.1)
 - **dropout_rate**: dropout rate (recommended: 0.7)
-- **fix_tags**: whether to match the output tags with the UD annotation guidelines for the underlying languages (e.g., converting PRT to ADV in TUR)
-- **run_postprocessing**: whether to force the tagging of punctuation marks, symbols and numbers in the output
+- **fix_tags**: whether to match the output tags with the UD annotation guidelines for the underlying language (e.g., converting PRT to ADV in TUR)
+- **run_postprocessing**: whether to force rule-based tagging for punctuation marks, symbols and numbers in the output
 - **overwrite_by_output**: whether to  use the tags in the test dataset(s) (e.g., when partially annotated) to overwrite the system output
 
 #### Notes
