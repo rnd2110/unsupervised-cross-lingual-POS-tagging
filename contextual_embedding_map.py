@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 import numpy as np
 import ast
 
@@ -21,7 +18,7 @@ class Contextual_Embedding_Map:
 
         tokenization = {}
 
-        #### Read tokenization information
+        # Read tokenization information.
         contextual_tokenization_path_list = self.contextual_tokenization_paths.split(',')
         for contextual_tokenization_path in contextual_tokenization_path_list:
             with open(contextual_tokenization_path) as tokenization_lines:
@@ -37,7 +34,7 @@ class Contextual_Embedding_Map:
         self.max_contextual_embedding_value = 1.0
         sentence_index = 0
 
-        #### Read word embeddings
+        # Read word embeddings.
         contextual_embedding_path_list = self.contextual_embedding_paths.split(',')
         for contextual_embedding_path in contextual_embedding_path_list:
             with open(contextual_embedding_path) as embedding_lines:
@@ -75,6 +72,7 @@ class Contextual_Embedding_Map:
                                 subwords = tokens[current_token_index: ending_index]
                                 current_embeddings = embeddings[current_token_index: ending_index]
 
+                                # Combine token embeddings.
                                 token_embedding = []
                                 if self.subword_combination_method == 'AVERAGE':
                                     token_embedding = self.get_embedding_average(current_embeddings)

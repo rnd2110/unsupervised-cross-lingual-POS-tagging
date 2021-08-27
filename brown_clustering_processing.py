@@ -1,9 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 from vocab_processing import *
-
-import numpy as np
 
 class BROWN_Processor:
     
@@ -24,7 +19,7 @@ class BROWN_Processor:
 
         count = 1
 
-        ### Construct the clusters
+        # Construct the clusters given an output file of words and their clusters.
         if brown_clusters_path != None:
             for line in open(brown_clusters_path):
                 if len(line) > 0:
@@ -57,7 +52,7 @@ class BROWN_Processor:
 
         print("Brown Max: ", self.max_brown_cluster_index)
 
-    #### Retrieve the clusters of a given word
+    # Retrieve the clusters of a given word.
     def get_brown_cluster(self, word):
         output = []
         if word == START_MARKER:
@@ -72,17 +67,6 @@ class BROWN_Processor:
 
         if word in self.cluster_map:
              ids[0] = self.cluster_map[word]
-
-        '''
-        elif word in self.unknown_map:
-            return self.unknown_map[word]
-        else:
-            nums = np.ones(10*(self.brown_size+1))
-            nums[:(5*(self.brown_size+1))] = 0
-            np.random.shuffle(nums)
-            self.unknown_map[word] = nums
-            return nums
-        '''
              
         if ids[0] > 0:
             for j in range(1, self.brown_size+1):

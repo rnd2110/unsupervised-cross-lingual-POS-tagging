@@ -1,11 +1,8 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
 from vocab_processing import *
 
 HELDOUT_PERCENTAGE = 10
 
-# Read the datasets for training and testing.
+# Reading the datasets for training and testing
 def read_data(train, target_language, source_language, data_path, data_set, training_size, max_sentence_length, min_density, hold_out):
     data_path = get_data_file_path(train, target_language, source_language, data_path, data_set)
     content = []
@@ -13,7 +10,7 @@ def read_data(train, target_language, source_language, data_path, data_set, trai
     index = 0
     word_count = 0
 
-    #### Read the data
+    # Read the data.
     with open(data_path) as data_src:
         for line in data_src:
             all_count = line.count(' ')+1
@@ -49,6 +46,6 @@ def read_data(train, target_language, source_language, data_path, data_set, trai
 # Construct the data path.
 def get_data_file_path(train, target_language, source_language, data_path, data_set):
     if train:
-        return data_path + '/' + target_language + '-' + source_language + '-POSUD-' + data_set + '.txt'
+        return data_path + '/' + target_language + '-' + source_language + '-' + data_set + '.txt'
     else:
-        return data_path + '/' + target_language + '-POSUD-' + data_set + '.txt'
+        return data_path + '/' + target_language + '-' + data_set + '.txt'

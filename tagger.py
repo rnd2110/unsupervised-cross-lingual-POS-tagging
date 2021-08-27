@@ -4,6 +4,7 @@
 import os
 import argparse
 import random
+import math
 
 import torch
 import numpy as np
@@ -12,7 +13,8 @@ from data_reader import *
 from brown_clustering_processing import *
 from contextual_embedding_map import *
 
-#Parameters
+# Parameters
+
 EMBEDDING_DIM = 64
 LSTM_HIDDEN_DIM = 128
 EPOCHS = 12
@@ -36,22 +38,26 @@ MAX_SENTENCE_LENGTH = -1
 MIN_DENSITY = 0.49999
 
 USE_WORD_EMBEDDINGS = True
-USE_AFFIX_EMBEDDINGS = True
+USE_LENGTH_AFFIX_EMBEDDINGS = True
+USE_SEGMENTATION_AFFIX_EMBEDDINGS = True
+USE_SEGMENTATION_COMPLEX_AFFIX_EMBEDDINGS = True
+USE_SEGMENTATION_STEM_EMBEDDINGS = True
 USE_CHAR_EMBEDDINGS = True
+SEGMENTATION_GRAMMAR_OUTPUT_PATH = ''
 USE_BROWN_CLUSTERS = True
 BROWN_CLUSTER_PATH = ''
 USE_CONTEXTUAL_EMBEDDINGS = True
 CONTEXTUAL_EMBEDDING_DIM = 1024
 CONTEXTUAL_EMBEDDING_PATH = ''
 CONTEXTUAL_TOKENIZATION_PATH = ''
-SUBWORD_COMBINATION_METHOD = 'AVERAGE', #FIRST, AVERAGE, FIRST_LAST, LONGEST
+SUBWORD_COMBINATION_METHOD = 'AVERAGE',  # FIRST, AVERAGE, FIRST_LAST, LONGEST
 
 FIX_TAGS = True
 RUN_POSTPROCESSING = False
 OVERWRITE_BY_OUTPUT = False
 
-seed_value=1
-#os.environ['PYTHONHASHSEED']=str(seed_value)
+seed_value = 1
+# os.environ['PYTHONHASHSEED']=str(seed_value)
 random.seed(seed_value)
 np.random.seed(seed_value)
 torch.manual_seed(seed_value)
@@ -60,15 +66,16 @@ if torch.cuda.is_available():
 
 torch.set_num_threads(1)
 
+
 def generate_random_vector(seed, min_value, max_value, dim1, dim2):
     np.random.seed(seed)
-    rand_array = np.random.uniform(min_value,max_value,[dim1, dim2])
+    rand_array = np.random.uniform(min_value, max_value, [dim1, dim2])
     return rand_array
+
 
 def main():
 
-    #### Read the arguments
-    
+    # Read the arguments.
     parser = argparse.ArgumentParser(description='POS Tagger')
     parser.add_argument('target_language')
     parser.add_argument('source_language')
@@ -81,8 +88,12 @@ def main():
     parser.add_argument('max_sentence_length')
     parser.add_argument('min_density')
     parser.add_argument('use_word_embeddings')
-    parser.add_argument('use_affix_embeddings')
+    parser.add_argument('use_length_affix_embeddings')
+    parser.add_argument('use_segmentation_affix_embeddings')
+    parser.add_argument('use_segmentation_complex_affix_embeddings')
+    parser.add_argument('use_segmentation_stem_embeddings')
     parser.add_argument('use_char_embeddings')
+    parser.add_argument('segmentation_grammar_output_path')
     parser.add_argument('use_brown_clusters')
     parser.add_argument('brown_cluster_path')
     parser.add_argument('use_contextual_embeddings')
@@ -97,9 +108,9 @@ def main():
     parser.add_argument('fix_tags')
     parser.add_argument('run_postprocessing')
     parser.add_argument('overwrite_by_output')
-    
+
     args = parser.parse_args()
-    
+
     params = {}
 
     params['TARGET_LANGUAGE'] = TARGET_LANGUAGE
@@ -113,15 +124,19 @@ def main():
     params['MAX_SENTENCE_LENGTH'] = MAX_SENTENCE_LENGTH
     params['MIN_DENSITY'] = MIN_DENSITY
     params['USE_WORD_EMBEDDINGS'] = USE_WORD_EMBEDDINGS
-    params['USE_AFFIX_EMBEDDINGS'] = USE_AFFIX_EMBEDDINGS
+    params['USE_LENGTH_AFFIX_EMBEDDINGS'] = USE_LENGTH_AFFIX_EMBEDDINGS
+    params['USE_SEGMENTATION_AFFIX_EMBEDDINGS'] = USE_SEGMENTATION_AFFIX_EMBEDDINGS
+    params['USE_SEGMENTATION_COMPLEX_AFFIX_EMBEDDINGS'] = USE_SEGMENTATION_COMPLEX_AFFIX_EMBEDDINGS
+    params['USE_SEGMENTATION_STEM_EMBEDDINGS'] = USE_SEGMENTATION_STEM_EMBEDDINGS
     params['USE_CHAR_EMBEDDINGS'] = USE_CHAR_EMBEDDINGS
+    params['SEGMENTATION_GRAMMAR_OUTPUT_PATH'] = SEGMENTATION_GRAMMAR_OUTPUT_PATH
     params['USE_BROWN_CLUSTERS'] = USE_BROWN_CLUSTERS
     params['BROWN_CLUSTER_PATH'] = BROWN_CLUSTER_PATH
     params['USE_CONTEXTUAL_EMBEDDINGS'] = USE_CONTEXTUAL_EMBEDDINGS
     params['CONTEXTUAL_EMBEDDING_DIM'] = CONTEXTUAL_EMBEDDING_DIM
     params['CONTEXTUAL_EMBEDDING_PATH'] = CONTEXTUAL_EMBEDDING_PATH
     params['CONTEXTUAL_TOKENIZATION_PATH'] = CONTEXTUAL_TOKENIZATION_PATH
-    params['SUBWORD_COMBINATION_METHOD'] = SUBWORD_COMBINATION_METHOD 
+    params['SUBWORD_COMBINATION_METHOD'] = SUBWORD_COMBINATION_METHOD
     params['EPOCHS'] = EPOCHS
     params['LEARNING_RATE'] = LEARNING_RATE
     params['LEARNING_DECAY_RATE'] = LEARNING_DECAY_RATE
@@ -152,10 +167,18 @@ def main():
         params['MIN_DENSITY'] = float(args.min_density)
     if args.use_word_embeddings is not None:
         params['USE_WORD_EMBEDDINGS'] = str2bool(args.use_word_embeddings)
-    if args.use_affix_embeddings is not None:
-        params['USE_AFFIX_EMBEDDINGS'] = str2bool(args.use_affix_embeddings)
+    if args.use_length_affix_embeddings is not None:
+        params['USE_LENGTH_AFFIX_EMBEDDINGS'] = str2bool(args.use_length_affix_embeddings)
+    if args.use_segmentation_affix_embeddings is not None:
+        params['USE_SEGMENTATION_AFFIX_EMBEDDINGS'] = str2bool(args.use_segmentation_affix_embeddings)
+    if args.use_segmentation_complex_affix_embeddings is not None:
+        params['USE_SEGMENTATION_COMPLEX_AFFIX_EMBEDDINGS'] = str2bool(args.use_segmentation_complex_affix_embeddings)
+    if args.use_segmentation_stem_embeddings is not None:
+        params['USE_SEGMENTATION_STEM_EMBEDDINGS'] = str2bool(args.use_segmentation_stem_embeddings)
     if args.use_char_embeddings is not None:
         params['USE_CHAR_EMBEDDINGS'] = str2bool(args.use_char_embeddings)
+    if args.segmentation_grammar_output_path is not None:
+        params['SEGMENTATION_GRAMMAR_OUTPUT_PATH'] = args.segmentation_grammar_output_path
     if args.use_brown_clusters is not None:
         params['USE_BROWN_CLUSTERS'] = str2bool(args.use_brown_clusters)
     if args.brown_cluster_path is not None:
@@ -186,23 +209,28 @@ def main():
         params['OVERWRITE_BY_OUTPUT'] = str2bool(args.overwrite_by_output)
 
     print("Reading data...")
-    train, tune = read_data(True, params['TARGET_LANGUAGE'], params['SOURCE_LANGUAGE'], params['DATA_PATH'], params['TRAINING_DATA_SET'], params['TRAINING_SIZE'], params['MAX_SENTENCE_LENGTH'],  params['MIN_DENSITY'], True)
+    train, tune = read_data(True, params['TARGET_LANGUAGE'], params['SOURCE_LANGUAGE'], params['DATA_PATH'],
+                            params['TRAINING_DATA_SET'], params['TRAINING_SIZE'],
+                            params['MAX_SENTENCE_LENGTH'], params['MIN_DENSITY'], True)
     tests = []
     test_data_set_map = {}
-    test_data_set_list = params['TEST_DATA_SETS'].split(',')
-    for test_data_set in test_data_set_list:
-        test,_ = read_data(False, params['TARGET_LANGUAGE'], params['SOURCE_LANGUAGE'], params['DATA_PATH'], test_data_set, -1, -1, params['MIN_DENSITY'], False)
-        tests.append(test)
-        test_data_set_map[test_data_set] = test
-    vocab_processor = Vocab(train, tune, tests)
+    if params['TEST_DATA_SETS'] != 'NA':
+        test_data_set_list = params['TEST_DATA_SETS'].split(',')
+        for test_data_set in test_data_set_list:
+            test, _ = read_data(False, params['TARGET_LANGUAGE'], params['SOURCE_LANGUAGE'], params['DATA_PATH'],
+                                test_data_set, -1, -1, params['MIN_DENSITY'], False)
+            tests.append(test)
+            test_data_set_map[test_data_set] = test
+
+    vocab_processor = Vocab(params['TARGET_LANGUAGE'], train, tune, tests, params['SEGMENTATION_GRAMMAR_OUTPUT_PATH'])
     print("Training size: ", len(train))
 
-    # Create output and model directories if needed
+    # Create output and model directories if needed.
     if not os.path.exists(params['OUTPUT_PATH']):
         os.makedirs(params['OUTPUT_PATH'])
     if not os.path.exists(params['MODEL_PATH']):
         os.makedirs(params['MODEL_PATH'])
-        
+
     brown_processor = None
     if params['USE_BROWN_CLUSTERS']:
         print("Loading Brown clusters...")
@@ -215,19 +243,25 @@ def main():
         all_data = train + tune
         for test_data_set in test_data_set_map:
             all_data = all_data + test_data_set_map[test_data_set]
-        for n, (tokens, tags) in enumerate(all_data):        
+        for n, (tokens, tags) in enumerate(all_data):
             sentence = ' '.join([simplify_token(word) for word in tokens][1:-1])
             sentences.append(sentence)
-        contextual_embedding_map = Contextual_Embedding_Map(params['CONTEXTUAL_EMBEDDING_PATH'], params['CONTEXTUAL_TOKENIZATION_PATH'], params['SUBWORD_COMBINATION_METHOD'], sentences)
+        contextual_embedding_map = Contextual_Embedding_Map(params['CONTEXTUAL_EMBEDDING_PATH'],
+                                                            params['CONTEXTUAL_TOKENIZATION_PATH'],
+                                                            params['SUBWORD_COMBINATION_METHOD'], sentences)
         contextual_embedding_map.load_embeddings()
 
-    #### Model creation
+    # Model creation
     WORD_LSTM_DIM = EMBEDDING_DIM if params['USE_WORD_EMBEDDINGS'] else 0
-    AFFIX_LSTM_DIM = 8 * EMBEDDING_DIM if params['USE_AFFIX_EMBEDDINGS'] else 0
+    LENGTH_AFFIX_LSTM_DIM = 8 * EMBEDDING_DIM if params['USE_LENGTH_AFFIX_EMBEDDINGS'] else 0
+    SEGMENTATION_AFFIX_LSTM_DIM = 2 * EMBEDDING_DIM if params['USE_SEGMENTATION_AFFIX_EMBEDDINGS'] else 0
+    SEGMENTATION_COMPLEX_AFFIX_LSTM_DIM = 2 * EMBEDDING_DIM if params[
+        'USE_SEGMENTATION_COMPLEX_AFFIX_EMBEDDINGS'] else 0
+    SEGMENTATION_STEM_LSTM_DIM = EMBEDDING_DIM if params['USE_SEGMENTATION_STEM_EMBEDDINGS'] else 0
     CHAR_LSTM_DIM = (EMBEDDING_DIM * vocab_processor.max_token_length()) if params['USE_CHAR_EMBEDDINGS'] else 0
-    BROWN_LSTM_DIM = 10 * (BROWN_SIZE +1 if params['USE_BROWN_CLUSTERS'] else 0)
-    CONTEXTUAL_LSTM_DIM = params['CONTEXTUAL_EMBEDDING_DIM']  if params['USE_CONTEXTUAL_EMBEDDINGS'] else 0
-    dimensions = WORD_LSTM_DIM + AFFIX_LSTM_DIM + CHAR_LSTM_DIM + BROWN_LSTM_DIM + CONTEXTUAL_LSTM_DIM
+    BROWN_LSTM_DIM = 10 * (BROWN_SIZE + 1 if params['USE_BROWN_CLUSTERS'] else 0)
+    CONTEXTUAL_LSTM_DIM = params['CONTEXTUAL_EMBEDDING_DIM'] if params['USE_CONTEXTUAL_EMBEDDINGS'] else 0
+    dimensions = WORD_LSTM_DIM + LENGTH_AFFIX_LSTM_DIM + SEGMENTATION_AFFIX_LSTM_DIM + SEGMENTATION_COMPLEX_AFFIX_LSTM_DIM + SEGMENTATION_STEM_LSTM_DIM + CHAR_LSTM_DIM + BROWN_LSTM_DIM + CONTEXTUAL_LSTM_DIM
     print('Input Dimensions: ', dimensions)
     model = TaggerModel(params, vocab_processor, dimensions)
     optimizer = torch.optim.Adam(model.parameters(), lr=params['LEARNING_RATE'], weight_decay=WEIGHT_DECAY)
@@ -237,134 +271,208 @@ def main():
         rescale_lr = lambda epoch: 1 / (1 + params['LEARNING_DECAY_RATE'] * epoch)
         scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=rescale_lr)
 
-    #### Group together framework-specific variables needed when iterating over the data.
-    expressions = (model, optimizer)
-    
-    #### Main training itertion
+    # Main training iterations
     max_tune_acc = 0
     for epoch in range(params['EPOCHS']):
         random.shuffle(train)
 
         print("Learning rate: ", epoch, optimizer.param_groups[0]["lr"]);
 
-        model.train() 
+        model.train()
         model.zero_grad()
 
-        #### Training pass
-        train_loss, train_acc1, _, _ = do_pass(train, expressions, True, vocab_processor, brown_processor, contextual_embedding_map, params, False, None, None)
-        ####
+        # Training pass
+        train_loss, train_acc1, _, _ = do_pass(train, model, optimizer, True, vocab_processor, brown_processor,
+                                               contextual_embedding_map, params, False, None, None, None)
         model.eval()
 
-        #### Tuning pass
-        _, train_acc2, _, _ = do_pass(train, expressions, False, vocab_processor, brown_processor, contextual_embedding_map, params, False, None, None)
-        _, tune_acc, _, _ = do_pass(tune, expressions, False, vocab_processor, brown_processor, contextual_embedding_map, params, False, None, None)
+        # Tuning pass
+        _, train_acc2, _, _ = do_pass(train, model, optimizer, False, vocab_processor, brown_processor,
+                                      contextual_embedding_map, params, False, None, None, None)
+        _, tune_acc, _, _ = do_pass(tune, model, optimizer, False, vocab_processor, brown_processor,
+                                    contextual_embedding_map, params, False, None, None, None)
 
-        print("@@@ {} loss: {:.5f} train-acc1: {:.3f} train-acc2: {:.5f} tune-acc: {:.5f}".format(epoch, train_loss, train_acc1, train_acc2, tune_acc))
+        print("@@@ {} loss: {:.5f} train-acc1: {:.3f} train-acc2: {:.5f} tune-acc: {:.5f}".format(epoch, train_loss,
+                                                                                                  train_acc1,
+                                                                                                  train_acc2, tune_acc))
 
-        #### Testing pass
+        # Testing pass
         for test_data_set in test_data_set_map:
-            writer = open(params['OUTPUT_PATH']+'/'+params['TARGET_LANGUAGE']+'-'+params['SOURCE_LANGUAGE']+'-'+test_data_set+'-'+str(epoch)+'.txt', 'w')
-            _, test_acc, test_acc_petrov, info = do_pass(test_data_set_map[test_data_set], expressions, False, vocab_processor, brown_processor, contextual_embedding_map, params, params['FIX_TAGS'], test_data_set, writer)
-            writer.close()
-            print("### " + params['TARGET_LANGUAGE']+'-'+params['SOURCE_LANGUAGE']+'-'+test_data_set+'-'+str(epoch) + ' ' + str(info) + " test-acc-petrov: {:.5f}".format(test_acc_petrov) + " test-acc: {:.5f}".format(test_acc))
+            output_writer = open(
+                params['OUTPUT_PATH'] + '/' + params['TARGET_LANGUAGE'] + '-' + params['SOURCE_LANGUAGE'] + '-' +
+                str(params['USE_SEGMENTATION_AFFIX_EMBEDDINGS']) + '-' + str(
+                    params['USE_SEGMENTATION_COMPLEX_AFFIX_EMBEDDINGS']) + '-' + str(
+                    params['USE_SEGMENTATION_STEM_EMBEDDINGS']) + '-' + test_data_set + '-' + str(epoch) + '.txt', 'w')
+            prob_writer = open(
+                params['OUTPUT_PATH'] + '/' + params['TARGET_LANGUAGE'] + '-' + params['SOURCE_LANGUAGE'] + '-' +
+                str(params['USE_SEGMENTATION_AFFIX_EMBEDDINGS']) + '-' + str(
+                    params['USE_SEGMENTATION_COMPLEX_AFFIX_EMBEDDINGS']) + '-' + str(
+                    params['USE_SEGMENTATION_STEM_EMBEDDINGS']) + '-' + test_data_set + '-' + str(epoch) + '-prob.txt',
+                'w')
+            _, test_acc, test_acc_petrov, info = do_pass(test_data_set_map[test_data_set], model, optimizer, False,
+                                                         vocab_processor, brown_processor, contextual_embedding_map,
+                                                         params, params['FIX_TAGS'], test_data_set, output_writer,
+                                                         prob_writer)
+            output_writer.close()
+            prob_writer.close()
+            print(
+                "# " + params['TARGET_LANGUAGE'] + '-' + params['SOURCE_LANGUAGE'] + '-' + test_data_set + '-' + str(
+                    epoch) + ' ' + str(info) + " test-acc-petrov: {:.5f}".format(
+                    test_acc_petrov) + " test-acc: {:.5f}".format(test_acc))
 
-        # Save model
-        if epoch == params['EPOCHS']-1:
-            torch.save(model.state_dict(), params['MODEL_PATH']+'/'+params['TARGET_LANGUAGE']+'-'+params['SOURCE_LANGUAGE']+'-'+params['TRAINING_DATA_SET']+'-'+str(epoch)+'.model')
+        # Save model.
+        if epoch == params['EPOCHS'] - 1 or epoch == 11:
+            torch.save(model.state_dict(),
+                       params['MODEL_PATH'] + '/' + params['TARGET_LANGUAGE'] + '-' + params['SOURCE_LANGUAGE'] + '-' +
+                       str(params['USE_SEGMENTATION_AFFIX_EMBEDDINGS']) + '-' + str(
+                           params['USE_SEGMENTATION_COMPLEX_AFFIX_EMBEDDINGS']) + '-' + str(
+                           params['USE_SEGMENTATION_STEM_EMBEDDINGS']) + '-' + params['TRAINING_DATA_SET'] + '-' + str(
+                           epoch) + '.model1')
+            torch.save(model,
+                       params['MODEL_PATH'] + '/' + params['TARGET_LANGUAGE'] + '-' + params['SOURCE_LANGUAGE'] + '-' +
+                       str(params['USE_SEGMENTATION_AFFIX_EMBEDDINGS']) + '-' + str(
+                           params['USE_SEGMENTATION_COMPLEX_AFFIX_EMBEDDINGS']) + '-' + str(
+                           params['USE_SEGMENTATION_STEM_EMBEDDINGS']) + '-' + params['TRAINING_DATA_SET'] + '-' + str(
+                           epoch) + '.model2')
 
-        #### Update learning rate
+        # Update learning rate.
         if scheduler is not None:
             scheduler.step()
 
-    ### Load model
-    #model.load_state_dict(torch.load(params['MODEL_PATH']), strict=False)
-
+# Weight initialization
 def weights_init(m):
-    classname = m.__class__.__name__ # python trick that will look for the type of connection in the object "m" (convolution or full connection)
+    classname = m.__class__.__name__
     if classname.find('Linear') != -1:
-        weight_shape = list(m.weight.data.size()) #?? list containing the shape of the weights in the object "m"
-        fan_in = weight_shape[1] # dim1
-        fan_out = weight_shape[0] # dim0
-        w_bound = np.sqrt(6. / (fan_in + fan_out)) # weight bound
-        m.weight.data.uniform_(-w_bound, w_bound) # generating some random weights of order inversely proportional to the size of the tensor of weights
-        m.bias.data.fill_(0) # initializing all the bias with zeros
-            
+        weight_shape = list(m.weight.data.size())
+        fan_in = weight_shape[1]
+        fan_out = weight_shape[0]
+        w_bound = np.sqrt(6. / (fan_in + fan_out))
+        m.weight.data.uniform_(-w_bound,  w_bound)
+        m.bias.data.fill_(0)
+
+
 class TaggerModel(torch.nn.Module):
-    #### In the constructor we define objects that will do each of the computations.
+    # In the constructor we define objects that will do each of the computations.
 
     def __init__(self, params, vocab_processor, dimensions):
         super().__init__()
-        
-        ### Create embeddings
-        word_embedding_tensor = torch.FloatTensor(generate_random_vector(1, -1, 1, vocab_processor.num_tokens(), EMBEDDING_DIM))
+
+        self.vocab_processor = vocab_processor
+        self.dimensions = dimensions
+
+        # Create embeddings.
+        word_embedding_tensor = torch.FloatTensor(
+            generate_random_vector(1, -1, 1, vocab_processor.num_tokens(), EMBEDDING_DIM))
         self.word_embedding = torch.nn.Embedding.from_pretrained(word_embedding_tensor, freeze=False)
 
-        prefix1_embedding_tensor = torch.FloatTensor(generate_random_vector(2, -1, 1, vocab_processor.num_prefixes1(), EMBEDDING_DIM))
+        prefix1_embedding_tensor = torch.FloatTensor(
+            generate_random_vector(2, -1, 1, vocab_processor.num_prefixes1(), EMBEDDING_DIM))
         self.prefix1_embedding = torch.nn.Embedding.from_pretrained(prefix1_embedding_tensor, freeze=False)
 
-        prefix2_embedding_tensor = torch.FloatTensor(generate_random_vector(3, -1, 1, vocab_processor.num_prefixes2(), EMBEDDING_DIM))
+        prefix2_embedding_tensor = torch.FloatTensor(
+            generate_random_vector(3, -1, 1, vocab_processor.num_prefixes2(), EMBEDDING_DIM))
         self.prefix2_embedding = torch.nn.Embedding.from_pretrained(prefix2_embedding_tensor, freeze=False)
 
-        prefix3_embedding_tensor = torch.FloatTensor(generate_random_vector(4, -1, 1, vocab_processor.num_prefixes3(), EMBEDDING_DIM))
+        prefix3_embedding_tensor = torch.FloatTensor(
+            generate_random_vector(4, -1, 1, vocab_processor.num_prefixes3(), EMBEDDING_DIM))
         self.prefix3_embedding = torch.nn.Embedding.from_pretrained(prefix3_embedding_tensor, freeze=False)
 
-        prefix4_embedding_tensor = torch.FloatTensor(generate_random_vector(5, -1, 1, vocab_processor.num_prefixes4(), EMBEDDING_DIM))
+        prefix4_embedding_tensor = torch.FloatTensor(
+            generate_random_vector(5, -1, 1, vocab_processor.num_prefixes4(), EMBEDDING_DIM))
         self.prefix4_embedding = torch.nn.Embedding.from_pretrained(prefix4_embedding_tensor, freeze=False)
 
-        suffix1_embedding_tensor = torch.FloatTensor(generate_random_vector(6, -1, 1, vocab_processor.num_suffixes1(), EMBEDDING_DIM))
+        complex_prefix_embedding_tensor = torch.FloatTensor(
+            generate_random_vector(6, -1, 1, vocab_processor.num_complex_prefixes(), EMBEDDING_DIM))
+        self.complex_prefix_embedding = torch.nn.Embedding.from_pretrained(complex_prefix_embedding_tensor,
+                                                                           freeze=False)
+
+        prefix_embedding_tensor = torch.FloatTensor(
+            generate_random_vector(7, -1, 1, vocab_processor.num_prefixes(), EMBEDDING_DIM))
+        self.prefix_embedding = torch.nn.Embedding.from_pretrained(prefix_embedding_tensor, freeze=False)
+
+        stem_embedding_tensor = torch.FloatTensor(
+            generate_random_vector(8, -1, 1, vocab_processor.num_stems(), EMBEDDING_DIM))
+        self.stem_embedding = torch.nn.Embedding.from_pretrained(stem_embedding_tensor, freeze=False)
+
+        suffix1_embedding_tensor = torch.FloatTensor(
+            generate_random_vector(9, -1, 1, vocab_processor.num_suffixes1(), EMBEDDING_DIM))
         self.suffix1_embedding = torch.nn.Embedding.from_pretrained(suffix1_embedding_tensor, freeze=False)
 
-        suffix2_embedding_tensor = torch.FloatTensor(generate_random_vector(7, -1, 1, vocab_processor.num_suffixes2(), EMBEDDING_DIM))
+        suffix2_embedding_tensor = torch.FloatTensor(
+            generate_random_vector(10, -1, 1, vocab_processor.num_suffixes2(), EMBEDDING_DIM))
         self.suffix2_embedding = torch.nn.Embedding.from_pretrained(suffix2_embedding_tensor, freeze=False)
 
-        suffix3_embedding_tensor = torch.FloatTensor(generate_random_vector(8, -1, 1, vocab_processor.num_suffixes3(), EMBEDDING_DIM))
+        suffix3_embedding_tensor = torch.FloatTensor(
+            generate_random_vector(11, -1, 1, vocab_processor.num_suffixes3(), EMBEDDING_DIM))
         self.suffix3_embedding = torch.nn.Embedding.from_pretrained(suffix3_embedding_tensor, freeze=False)
 
-        suffix4_embedding_tensor = torch.FloatTensor(generate_random_vector(9, -1, 1, vocab_processor.num_suffixes4(), EMBEDDING_DIM))
+        suffix4_embedding_tensor = torch.FloatTensor(
+            generate_random_vector(12, -1, 1, vocab_processor.num_suffixes4(), EMBEDDING_DIM))
         self.suffix4_embedding = torch.nn.Embedding.from_pretrained(suffix4_embedding_tensor, freeze=False)
 
-        char_embedding_tensor = torch.FloatTensor(generate_random_vector(10, -1, 1, vocab_processor.num_characters(), EMBEDDING_DIM))
+        complex_suffix_embedding_tensor = torch.FloatTensor(
+            generate_random_vector(13, -1, 1, vocab_processor.num_complex_suffixes(), EMBEDDING_DIM))
+        self.complex_suffix_embedding = torch.nn.Embedding.from_pretrained(complex_suffix_embedding_tensor,
+                                                                           freeze=False)
+
+        suffix_embedding_tensor = torch.FloatTensor(
+            generate_random_vector(14, -1, 1, vocab_processor.num_suffixes(), EMBEDDING_DIM))
+        self.suffix_embedding = torch.nn.Embedding.from_pretrained(suffix_embedding_tensor, freeze=False)
+
+        char_embedding_tensor = torch.FloatTensor(
+            generate_random_vector(15, -1, 1, vocab_processor.num_characters(), EMBEDDING_DIM))
         self.chars_embedding = torch.nn.Embedding.from_pretrained(char_embedding_tensor, freeze=False)
-        
-        ### Create input dropout parameter
+
+        # Create input dropout parameter.
         self.dropout = torch.nn.Dropout(params['DROPOUT_RATE'])
-                                                     
-        ### Create LSTM parameters
+
+        # Create LSTM parameters.
         self.lstm = torch.nn.LSTM(dimensions, LSTM_HIDDEN_DIM, num_layers=1, batch_first=True, bidirectional=True)
 
-        ### Initilizing the weights of the model with random weights
+        # Initilizing the weights of the model with random weights.
         self.apply(weights_init)
-        
-        # Create output dropout parameter
+
+        # Create output dropout parameter.
         self.lstm_output_dropout = torch.nn.Dropout(params['DROPOUT_RATE'])
-                                                     
-        # Create final matrix multiply parameters
+
+        # Create final matrix multiply parameters.
         self.hidden_to_tag = torch.nn.Linear(LSTM_HIDDEN_DIM * 2, vocab_processor.num_tags())
 
-        #self.crf = CRF(vocab_processor.num_tags())
-        
-    def forward(self, words, prefixes1, prefixes2, prefixes3, prefixes4, suffixes1, suffixes2, suffixes3, suffixes4, chars_list, brown_vectors, contextual_vectors, labels, lengths, cur_batch_size, vocab_processor, params):
+        # self.crf = CRF(vocab_processor.num_tags())
+
+    def forward(self, words, prefixes1, prefixes2, prefixes3, prefixes4, complex_prefixes, prefixes, stems, suffixes1,
+                suffixes2, suffixes3, suffixes4, complex_suffixes, suffixes, chars_list, brown_vectors,
+                contextual_vectors, labels, lengths, cur_batch_size, blank_tag_id, params):
 
         max_length = words.size(1)
 
-        ### Look up word vectors
+        # Look up word vectors.
         word_vectors = self.word_embedding(words)
         prefix1_vectors = self.prefix1_embedding(prefixes1)
         prefix2_vectors = self.prefix2_embedding(prefixes2)
         prefix3_vectors = self.prefix3_embedding(prefixes3)
         prefix4_vectors = self.prefix4_embedding(prefixes4)
+        complex_prefix_vectors = self.complex_prefix_embedding(complex_prefixes)
+        prefix_vectors = torch.zeros((1, EMBEDDING_DIM)).float()
+        for prefix in prefixes:
+            prefix_vectors = prefix_vectors.add(self.prefix_embedding(prefix))
+        stem_vectors = self.stem_embedding(stems)
         suffix1_vectors = self.suffix1_embedding(suffixes1)
         suffix2_vectors = self.suffix2_embedding(suffixes2)
         suffix3_vectors = self.suffix3_embedding(suffixes3)
         suffix4_vectors = self.suffix4_embedding(suffixes4)
+        complex_suffix_vectors = self.complex_suffix_embedding(complex_suffixes)
+        suffix_vectors = torch.zeros((1, EMBEDDING_DIM)).float()
+        for suffix in suffixes:
+            suffix_vectors = suffix_vectors.add(self.suffix_embedding(suffix))
         chars_vectors = []
         for chars in chars_list:
             chars_vectors.append(self.suffix4_embedding(chars))
 
-        ### Apply dropout
+        # Apply dropout.
         if params['USE_WORD_EMBEDDINGS']:
             word_vectors = self.dropout(word_vectors)
-        if params['USE_AFFIX_EMBEDDINGS']:
+        if params['USE_LENGTH_AFFIX_EMBEDDINGS']:
             prefix1_vectors = self.dropout(prefix1_vectors)
             prefix2_vectors = self.dropout(prefix2_vectors)
             prefix3_vectors = self.dropout(prefix3_vectors)
@@ -373,37 +481,60 @@ class TaggerModel(torch.nn.Module):
             suffix2_vectors = self.dropout(suffix2_vectors)
             suffix3_vectors = self.dropout(suffix3_vectors)
             suffix4_vectors = self.dropout(suffix4_vectors)
+        if params['USE_SEGMENTATION_AFFIX_EMBEDDINGS']:
+            prefix_vectors = self.dropout(prefix_vectors)
+            suffix_vectors = self.dropout(suffix_vectors)
+        if params['USE_SEGMENTATION_COMPLEX_AFFIX_EMBEDDINGS']:
+            complex_prefix_vectors = self.dropout(complex_prefix_vectors)
+            complex_suffix_vectors = self.dropout(complex_suffix_vectors)
+        if params['USE_SEGMENTATION_STEM_EMBEDDINGS']:
+            stem_vectors = self.dropout(stem_vectors)
         if params['USE_CHAR_EMBEDDINGS']:
             for chars_vector in chars_vectors:
                 chars_vector = self.dropout(chars_vector)
-        #if params['USE_BROWN_CLUSTERS']:
-            #brown_vectors = self.dropout(brown_vectors)
         if params['USE_CONTEXTUAL_EMBEDDINGS']:
             contextual_vectors = self.dropout(contextual_vectors)
 
-        ### Concatenation of word-repreentation variables
+        # Concatenation of word-repreentation variables.
         conc_tensor = None
         if params['USE_WORD_EMBEDDINGS']:
             conc_tensor = torch.cat((conc_tensor, word_vectors), -1) if conc_tensor is not None else word_vectors
-        if params['USE_AFFIX_EMBEDDINGS']:
-            conc_tensor = torch.cat((conc_tensor, prefix1_vectors, prefix2_vectors, prefix3_vectors, prefix4_vectors, suffix1_vectors, suffix2_vectors, suffix3_vectors, suffix4_vectors), -1) if conc_tensor is not None else torch.cat((prefix1_vectors, prefix2_vectors, prefix3_vectors, prefix4_vectors, suffix1_vectors, suffix2_vectors, suffix3_vectors, suffix4_vectors), -1)
+        if params['USE_LENGTH_AFFIX_EMBEDDINGS']:
+            conc_tensor = torch.cat((conc_tensor, prefix1_vectors, prefix2_vectors, prefix3_vectors, prefix4_vectors,
+                                     suffix1_vectors, suffix2_vectors, suffix3_vectors, suffix4_vectors),
+                                    -1) if conc_tensor is not None else torch.cat((prefix1_vectors, prefix2_vectors,
+                                                                                   prefix3_vectors, prefix4_vectors,
+                                                                                   suffix1_vectors, suffix2_vectors,
+                                                                                   suffix3_vectors, suffix4_vectors),
+                                                                                  -1)
+        if params['USE_SEGMENTATION_AFFIX_EMBEDDINGS']:
+            conc_tensor = torch.cat((conc_tensor, prefix_vectors, suffix_vectors),
+                                    -1) if conc_tensor is not None else torch.cat((prefix_vectors, suffix_vectors), -1)
+        if params['USE_SEGMENTATION_COMPLEX_AFFIX_EMBEDDINGS']:
+            conc_tensor = torch.cat((conc_tensor, complex_prefix_vectors, complex_suffix_vectors),
+                                    -1) if conc_tensor is not None else torch.cat(
+                (complex_prefix_vectors, complex_suffix_vectors), -1)
+        if params['USE_SEGMENTATION_STEM_EMBEDDINGS']:
+            conc_tensor = torch.cat((conc_tensor, stem_vectors), -1) if conc_tensor is not None else stem_vectors
         if params['USE_CHAR_EMBEDDINGS']:
-            conc_tensor = torch.cat((conc_tensor, torch.cat(chars_vectors, -1)), -1) if conc_tensor is not None else torch.cat(chars_vectors, -1)
+            conc_tensor = torch.cat((conc_tensor, torch.cat(chars_vectors, -1)),
+                                    -1) if conc_tensor is not None else torch.cat(chars_vectors, -1)
         if params['USE_BROWN_CLUSTERS']:
             conc_tensor = torch.cat((conc_tensor, brown_vectors), -1) if conc_tensor is not None else brown_vectors
         if params['USE_CONTEXTUAL_EMBEDDINGS']:
-            conc_tensor = torch.cat((conc_tensor, contextual_vectors), -1) if conc_tensor is not None else contextual_vectors
+            conc_tensor = torch.cat((conc_tensor, contextual_vectors),
+                                    -1) if conc_tensor is not None else contextual_vectors
 
-        # Run LSTM
+        # Run LSTM.
         conc_tensor = torch.nn.utils.rnn.pack_padded_sequence(conc_tensor, lengths, True)
-                                                    
         lstm_out, _ = self.lstm(conc_tensor, None)
         lstm_out, _ = torch.nn.utils.rnn.pad_packed_sequence(lstm_out, batch_first=True, total_length=max_length)
-        ### Apply dropout
+
+        # Apply dropout.
         lstm_out_dropped = self.lstm_output_dropout(lstm_out)
         output_scores = self.hidden_to_tag(lstm_out_dropped)
 
-        # Calculate loss and predictions
+        # Calculate loss and predictions.
         output_scores = output_scores.view(cur_batch_size * max_length, -1)
         flat_labels = labels.view(cur_batch_size * max_length)
         loss_function = torch.nn.CrossEntropyLoss(ignore_index=0, reduction='sum')
@@ -412,35 +543,52 @@ class TaggerModel(torch.nn.Module):
         label_array = []
         for i in range(cur_batch_size):
             label_array.append(labels[i].detach().numpy())
-            
-        predicted_tags = []
 
-        words_array = words.detach().numpy()
+        predicted_tags = []
+        probabilities = []
 
         for i in range(len(output_scores)):
             output_score = output_scores[i].detach().numpy();
-            label = label_array[i//max_length][i%max_length]
+
+            sigma_e_z = 0
+            for j in range(len(output_score)):
+                sigma_e_z += math.exp(output_score[j])
+
+            label = label_array[i // max_length][i % max_length]
+
             argmax_pred = 0
             argmax_pred_tags = []
-            if params['OVERWRITE_BY_OUTPUT'] and label != vocab_processor.blank_tag_id():
+            argmax_probabilities = []
+            forced = False
+            if params['OVERWRITE_BY_OUTPUT'] and label != blank_tag_id:
                 argmax_pred = label
+                forced = True
             else:
                 argmax_pred = np.argmax(output_score)
-                if argmax_pred == vocab_processor.blank_tag_id():
-                    argmax_pred = np.argsort(output_score, axis=0)[len(output_score)-2]
-            argmax_pred_tags.append(argmax_pred)                                    
+                if argmax_pred == blank_tag_id:
+                    argmax_pred = np.argsort(output_score, axis=0)[len(output_score) - 2]
+
+            argmax_pred_tags.append(argmax_pred)
             predicted_tags.append(argmax_pred_tags)
+
+            argmax_probabilities.append((math.exp(output_score[argmax_pred]) / sigma_e_z) if not forced else 1.0)
+            probabilities.append(argmax_probabilities)
+
         flat = [item for sublist in predicted_tags for item in sublist]
         predicted_tags = torch.FloatTensor(flat)
 
+        flat = [item for sublist in probabilities for item in sublist]
+        probabilities = torch.FloatTensor(flat)
+
         predicted_tags = predicted_tags.view(cur_batch_size, max_length)
-        return loss, predicted_tags
+        probabilities = probabilities.view(cur_batch_size, max_length)
 
-#### Inference
-def do_pass(data, expressions, train, vocab_processor, brown_processor, contextual_embedding_map, params, fix_tags, test_data_set, writer):
+        return loss, predicted_tags, probabilities
 
-    model, optimizer = expressions
 
+# Inference
+def do_pass(data, model, optimizer, train, vocab_processor, brown_processor, contextual_embedding_map, params, fix_tags,
+            test_data_set, output_writer, prob_writer):
     match = 0
     match_petrov = 0
     total = 0
@@ -457,15 +605,14 @@ def do_pass(data, expressions, train, vocab_processor, brown_processor, contextu
 
     loss = 0
 
-    # Loop over batches
+    # Loop over batches.
     for start in range(0, len(data), BATCH_SIZE):
-        #### Form the batch and order it based on length (important for efficient processing in PyTorch).
-        batch = data[start : start + BATCH_SIZE]
-        batch.sort(key = lambda x: -len(x[0]))
+        # Form the batch and order it based on length (important for efficient processing in PyTorch).
+        batch = data[start: start + BATCH_SIZE]
+        batch.sort(key=lambda x: -len(x[0]))
 
-        ####
-        # Prepare inputs
-        #### Prepare input arrays, using .long() to cast the type from Tensor to LongTensor.
+        # Prepare inputs.
+        # Prepare input arrays, using .long() to cast the type from Tensor to LongTensor.
         cur_batch_size = len(batch)
         max_length = len(batch[0][0])
         lengths = [len(v[0]) for v in batch]
@@ -474,19 +621,28 @@ def do_pass(data, expressions, train, vocab_processor, brown_processor, contextu
         input_prefix2_array = torch.zeros((cur_batch_size, max_length)).long()
         input_prefix3_array = torch.zeros((cur_batch_size, max_length)).long()
         input_prefix4_array = torch.zeros((cur_batch_size, max_length)).long()
+        input_complex_prefix_array = torch.zeros((cur_batch_size, max_length)).long()
+        input_prefix_arrays = []
+        for affix in range(10):
+            input_prefix_arrays.append(torch.zeros((cur_batch_size, max_length)).long())
+        input_stem_array = torch.zeros((cur_batch_size, max_length)).long()
         input_suffix1_array = torch.zeros((cur_batch_size, max_length)).long()
         input_suffix2_array = torch.zeros((cur_batch_size, max_length)).long()
         input_suffix3_array = torch.zeros((cur_batch_size, max_length)).long()
         input_suffix4_array = torch.zeros((cur_batch_size, max_length)).long()
+        input_complex_suffix_array = torch.zeros((cur_batch_size, max_length)).long()
+        input_suffix_arrays = []
+        for affix in range(10):
+            input_suffix_arrays.append(torch.zeros((cur_batch_size, max_length)).long())
         input_char_arrays = []
         for i in range(vocab_processor.max_token_length()):
             input_char_arrays.append(torch.zeros((cur_batch_size, max_length)).long())
         input_brown_array = []
         input_contextual_array = []
-        
+
         output_array = torch.zeros((cur_batch_size, max_length)).long()
-                                                     
-        #### Convert tokens and tags from strings to numbers using the indices.
+
+        # Convert tokens and tags from strings to numbers using the indices.
         for n, (tokens, tags) in enumerate(batch):
             token_ids = [vocab_processor.token2id(simplify_token(t)) for t in tokens]
             tag_ids = [vocab_processor.tag2id(t) for t in tags]
@@ -495,74 +651,110 @@ def do_pass(data, expressions, train, vocab_processor, brown_processor, contextu
             prefix2_list = []
             prefix3_list = []
             prefix4_list = []
+            complex_prefix_list = []
+            prefix_list = []
+            stem_list = []
             suffix1_list = []
             suffix2_list = []
             suffix3_list = []
             suffix4_list = []
+            complex_suffix_list = []
+            suffix_list = []
             char_list = []
 
-            for word in tokens:
-                word, prefix1, prefix2, prefix3, prefix4, suffix1, suffix2, suffix3, suffix4, chars = vocab_processor.get_features(word)
+            for token_index, token in enumerate(tokens):
+                token, prefix1, prefix2, prefix3, prefix4, complex_prefix, prefixes, stem, suffix1, suffix2, suffix3, suffix4, complex_suffix, suffixes, chars = vocab_processor.get_features(token)
                 prefix1_list.append(prefix1)
                 prefix2_list.append(prefix2)
                 prefix3_list.append(prefix3)
                 prefix4_list.append(prefix4)
+                complex_prefix_list.append(complex_prefix)
+                stem_list.append(stem)
+                prefix_list.append(prefixes)
                 suffix1_list.append(suffix1)
                 suffix2_list.append(suffix2)
                 suffix3_list.append(suffix3)
                 suffix4_list.append(suffix4)
+                complex_suffix_list.append(complex_suffix)
+                suffix_list.append(suffixes)
                 char_list.append(chars)
 
             prefix1_ids = [vocab_processor.prefix12id(prefix_feat) for prefix_feat in prefix1_list]
             prefix2_ids = [vocab_processor.prefix22id(prefix_feat) for prefix_feat in prefix2_list]
             prefix3_ids = [vocab_processor.prefix32id(prefix_feat) for prefix_feat in prefix3_list]
             prefix4_ids = [vocab_processor.prefix42id(prefix_feat) for prefix_feat in prefix4_list]
+            complex_prefix_ids = [vocab_processor.complex_prefix2id(prefix_feat) for prefix_feat in complex_prefix_list]
+            prefix_ids = [[vocab_processor.prefix2id(prefix_feat) for prefix_feat in local_prefix_list] for
+                          local_prefix_list in prefix_list]
+            stem_ids = [vocab_processor.stem2id(stem_feat) for stem_feat in stem_list]
             suffix1_ids = [vocab_processor.suffix12id(suffix_feat) for suffix_feat in suffix1_list]
             suffix2_ids = [vocab_processor.suffix22id(suffix_feat) for suffix_feat in suffix2_list]
             suffix3_ids = [vocab_processor.suffix32id(suffix_feat) for suffix_feat in suffix3_list]
             suffix4_ids = [vocab_processor.suffix42id(suffix_feat) for suffix_feat in suffix4_list]
+            complex_suffix_ids = [vocab_processor.complex_suffix2id(suffix_feat) for suffix_feat in complex_suffix_list]
+            suffix_ids = [[vocab_processor.suffix2id(suffix_feat) for suffix_feat in local_suffix_list] for
+                          local_suffix_list in suffix_list]
             char_ids = []
             for i in range(vocab_processor.max_token_length()):
                 char_ids.append([vocab_processor.character2id(chars[i]) for chars in char_list])
 
-            #### Fill the arrays, leaving the remaining values as zero (our padding value).
+            # Fill the arrays, leaving the remaining values as zero (our padding value).
             input_word_array[n, :len(tokens)] = torch.LongTensor(token_ids)
             input_prefix1_array[n, :len(tokens)] = torch.LongTensor(prefix1_ids)
             input_prefix2_array[n, :len(tokens)] = torch.LongTensor(prefix2_ids)
             input_prefix3_array[n, :len(tokens)] = torch.LongTensor(prefix3_ids)
             input_prefix4_array[n, :len(tokens)] = torch.LongTensor(prefix4_ids)
+            input_complex_prefix_array[n, :len(tokens)] = torch.LongTensor(complex_prefix_ids)
+            for affix in range(len(prefixes)):
+                input_prefix_arrays[affix][n, :len(tokens)] = torch.LongTensor(prefix_ids[affix])
+            input_stem_array[n, :len(tokens)] = torch.LongTensor(stem_ids)
             input_suffix1_array[n, :len(tokens)] = torch.LongTensor(suffix1_ids)
             input_suffix2_array[n, :len(tokens)] = torch.LongTensor(suffix2_ids)
             input_suffix3_array[n, :len(tokens)] = torch.LongTensor(suffix3_ids)
             input_suffix4_array[n, :len(tokens)] = torch.LongTensor(suffix4_ids)
+            input_complex_suffix_array[n, :len(tokens)] = torch.LongTensor(complex_suffix_ids)
+            for affix in range(len(suffixes)):
+                input_suffix_arrays[affix][n, :len(tokens)] = torch.LongTensor(suffix_ids[affix])
 
             for i in range(vocab_processor.max_token_length()):
                 input_char_arrays[i][n, :len(tokens)] = torch.LongTensor(char_ids[i])
 
             if params['USE_BROWN_CLUSTERS']:
-                brown_clusters = [torch.FloatTensor(brown_processor.get_brown_cluster(simplify_token(word))) for word in tokens]
-                for i in range(max_length-len(tokens)):
-                    brown_clusters.append(torch.zeros(10*(BROWN_SIZE+1)).float())
+                brown_clusters = [torch.FloatTensor(brown_processor.get_brown_cluster(simplify_token(word))) for word in
+                                  tokens]
+                for i in range(max_length - len(tokens)):
+                    brown_clusters.append(torch.zeros(10 * (BROWN_SIZE + 1)).float())
                     x = torch.stack(brown_clusters)
                 input_brown_array.append(torch.stack(brown_clusters))
 
             if params['USE_CONTEXTUAL_EMBEDDINGS']:
                 sentence = ' '.join([simplify_token(word) for word in tokens][1:-1])
-                contextual_clusters = [torch.FloatTensor(contextual_word_vector) for contextual_word_vector in contextual_embedding_map.contextual_embeddings[sentence]]
-                contextual_clusters = [torch.FloatTensor([-1]*params['CONTEXTUAL_EMBEDDING_DIM'])] + contextual_clusters + [torch.FloatTensor([1]*params['CONTEXTUAL_EMBEDDING_DIM'])]
-                for i in range(max_length-len(tokens)):
+                contextual_clusters = [torch.FloatTensor(contextual_word_vector) for contextual_word_vector in
+                                       contextual_embedding_map.contextual_embeddings[sentence]]
+                contextual_clusters = [torch.FloatTensor(
+                    [-1] * params['CONTEXTUAL_EMBEDDING_DIM'])] + contextual_clusters + [
+                                          torch.FloatTensor([1] * params['CONTEXTUAL_EMBEDDING_DIM'])]
+                for i in range(max_length - len(tokens)):
                     contextual_clusters.append(torch.zeros((params['CONTEXTUAL_EMBEDDING_DIM'])).float())
                 input_contextual_array.append(torch.stack(contextual_clusters))
-                           
+
             output_array[n, :len(tags)] = torch.LongTensor(tag_ids)
 
         brown_vectors = torch.stack(input_brown_array) if params['USE_BROWN_CLUSTERS'] else None
         contextual_vectors = torch.stack(input_contextual_array) if params['USE_CONTEXTUAL_EMBEDDINGS'] else None
-        
-        #### Construct computation
-        batch_loss, output = model(input_word_array, input_prefix1_array, input_prefix2_array, input_prefix3_array, input_prefix4_array, input_suffix1_array, input_suffix2_array, input_suffix3_array, input_suffix4_array, input_char_arrays, brown_vectors, contextual_vectors, output_array, lengths, cur_batch_size, vocab_processor, params)
 
-        #### Run computations
+        # Construct computation.
+        batch_loss, output, probabilities = model(input_word_array, input_prefix1_array, input_prefix2_array,
+                                                  input_prefix3_array,
+                                                  input_prefix4_array, input_complex_prefix_array, input_prefix_arrays,
+                                                  input_stem_array,
+                                                  input_suffix1_array, input_suffix2_array, input_suffix3_array,
+                                                  input_suffix4_array,
+                                                  input_complex_suffix_array, input_suffix_arrays, input_char_arrays,
+                                                  brown_vectors,
+                                                  contextual_vectors, output_array, lengths, cur_batch_size,
+                                                  vocab_processor.blank_tag_id(), params)
+        # Run computations.
         if train:
             batch_loss.backward()
             optimizer.step()
@@ -570,22 +762,27 @@ def do_pass(data, expressions, train, vocab_processor, brown_processor, contextu
             loss += batch_loss.item()
 
         predictions = output.cpu().data.numpy()
+        probabilities = probabilities.cpu().data.numpy()
 
-        #### Postprocess the predictions if required
+        # Postprocess the predictions if required.
         if params['RUN_POSTPROCESSING']:
             postprocessed_predictions = []
-            for (tokens, _), pred in zip(batch, predictions):
-                postprocessed_predictions.append(vocab_processor.postprocess_tags(pred, tokens))
+            postprocessed_probabilities = []
+            for (tokens, _), pred, prob in zip(batch, predictions, probabilities):
+                postprocessed_output = vocab_processor.postprocess_tags(pred, tokens, prob)
+                postprocessed_predictions.append(postprocessed_output[0])
+                postprocessed_probabilities.append(postprocessed_output[1])
             predictions = postprocessed_predictions
+            probabilities = postprocessed_probabilities
 
-        #### Update the number of correct tags and total tags
-        #### Generate Statistics
-        #### Fix tags
-        for (tokens, gold), pred in zip(batch, predictions):
+        # Update the number of correct tags and total tags.
+        # Generate Statistics.
+        # Fix tags.
+        for (tokens, gold), pred, prob in zip(batch, predictions, probabilities):
             index = 0
             output = []
             for token, gold_tag_label, predicted_tag in zip(tokens, gold, pred):
-                if index == 0 or index == len(gold)-1:
+                if index == 0 or index == len(gold) - 1:
                     index = index + 1
                     continue
 
@@ -617,15 +814,20 @@ def do_pass(data, expressions, train, vocab_processor, brown_processor, contextu
                         else:
                             OOV_match += 1
 
-                    if vocab_processor.convert_tag_to_petrov12(gold_tag) == vocab_processor.convert_tag_to_petrov12(predicted_tag):
+                    if vocab_processor.convert_tag_to_petrov12(gold_tag) == vocab_processor.convert_tag_to_petrov12(
+                            predicted_tag):
                         match_petrov += 1
 
-                    if writer:                            
+                    if output_writer:
                         output.append(token + '_' + vocab_processor.id2tag(predicted_tag))
-                    
+
                 index = index + 1
-            if writer:
-                writer.write(' '.join(output) + '\n')
+
+            # Write into the POS and prob output files.
+            if output_writer:
+                output_writer.write(' '.join(output) + '\n')
+            if prob_writer:
+                prob_writer.write(' '.join([str(p) for p in prob[1:len(output) + 1]]) + '\n')
 
     tag_info = ''
     for tag in UD_TAGS:
@@ -635,21 +837,25 @@ def do_pass(data, expressions, train, vocab_processor, brown_processor, contextu
         tag_info += ":" + (str(pos_match_map[tag]) if tag in pos_match_map else '0')
         tag_info += '-'
     tag_info = tag_info[:-1]
-    accuracy =  0 if total == 0 else (match / total)
+    accuracy = 0 if total == 0 else (match / total)
     accuracy_petrov = 0 if total == 0 else (match_petrov / total)
 
-    info = tag_info + ' ' + str(match)+':'+str(match_petrov)+'/'+str(total)+'-'+str(IV_match)+'/'+str(IV_total)+'-'+str(OOV_match)+'/'+str(OOV_total)
+    # Generate tagging info.
+    info = tag_info + ' ' + str(match) + ':' + str(match_petrov) + '/' + str(total) + '-' + str(IV_match) + '/' + str(
+        IV_total) + '-' + str(OOV_match) + '/' + str(OOV_total)
     return loss, accuracy, accuracy_petrov, info
+
 
 def str2bool(v):
     if isinstance(v, bool):
-       return v
+        return v
     if v.lower() in ('yes', 'true', 't', 'y', '1'):
         return True
     elif v.lower() in ('no', 'false', 'f', 'n', '0'):
         return False
     else:
         raise argparse.ArgumentTypeError('Boolean value expected.')
+
 
 if __name__ == '__main__':
     main()
