@@ -1,8 +1,8 @@
 import numpy as np
 
 from trivial_pos import *
-from MorphAGram.segmentation import *
-from MorphAGram.utils import *
+from segmentation import *
+from utils import *
 
 # CONSTANTS
 

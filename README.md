@@ -14,7 +14,9 @@
 - [PyTorch 1.1+]( https://pytorch.org/get-started/locally/ "PyTorch (>1.1)")
 - [NumPy](https://numpy.org/ "NumPy")
 - [Scikit-Learn](https://pypi.org/project/scikit-learn/ "Scikit-Learn")
-- [MorphAGram](https://github.com/rnd2110/MorphAGram "MorphAGram") (Add a `MorphAGram` directory in the main directory of this repo.)
+- [MorphAGram](https://github.com/rnd2110/MorphAGram "MorphAGram").
+  
+Note: You will need to add the `MorphAGram` python files `constants.py`, `segmentation.py` and `utils.py` in the main directory of your local copy of this repo.
 
 ---
 
