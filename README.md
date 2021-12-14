@@ -48,7 +48,7 @@ The  script `projection_handler.py` is responsible for projecting the tags from 
 
 ##### Projection: projection_handler.py
 ##### Parameters
--  **key_path**: alignments/workspace/<SL>-<TL>-<D>.keys
+-  **key_path**: alignments/workspace/\<SL\>-\<TL\>-<D>.keys
 -  **forward_alignment_path**: alignments/workspace/<SL>-<TL>-<D>-giza.forward
 -  **forward_source_vocabulary_path**: alignments/workspace/<SL>-<TL>-<D>-gfiles/<SL>-<TL>.vcb
 -  **forward_target_vocabulary_path**: alignments/workspace/<SL>-<TL>-<D>-gfiles/<TL>-<SL>.vcb
