@@ -23,14 +23,14 @@
 We use GIZA++ to train and produce word-level alignments between the target language and a source language for which POS annotations are available based on a parallel corpus that is white-space tokenized.
 
 - Create a directory `alignments` that has the `GIZA++` and `mkcls` installation directories, in addition to the `run_gizapp.sh` and `giza-convert.py` scripts and a `workspace` directory to store the inputs and outputs.
-- For the source language <SL\> (ISO3 code), the target language <TL\> (ISO3 code) and the dataset <D>, produce the following files:
-    - the source-target GIZA++ input parallel file `<SL\>-<TL\>-<D>.parallel` (per line: <white_space_tokenized_source_sentence> ||| <white_space_tokenized_target_sentence>)
-    - the GIZA++ input configuration file `<SL\>-<TL\>-<D>.giza.config`. Use the config file `data/gizapp-sample.config`, and replace 'ENG' by <SL\>, 'AFR' by <TL\> and 'bible' by <D>.
-    - a key file of sentence IDs `<SL\>-<TL\>-<D>.keys`, one ID per line. The order of the IDs should correspond to the order of the sentences in `<SL\>-<TL\>-<D>.parallel`.
-- Run the `run_gizapp.sh` script to train and produce the alignments from the source to the target with the three parameters <SL\>, <TL\> and <D>. This will create a new directory `workspace/<SL\>-<TL\>-<D>-gfiles` with the necessary GIZA++ output files.
-- Run the `giza-convert.py` script to produce the forward alignments as follows: `python giza-convert.py workspace/<SL\>-<TL\>-<D>-gfiles/<SL\>-<TL\>.alignments N > workspace/<SL\>-<TL\>-<D>-giza.forward`
-- Repeat the second and their steps while switching <SL\> and <TL\> in order to produce the backward alignments.
-- Run the `giza-convert.py` script to produce the backward alignments as follows: `python giza-convert.py workspace/<TL\>-<SL\>-<D>-gfiles/<TL\>-<SL\>.alignments Y > workspace/<SL\>-<TL\>-<D>-giza.backward`
+- For the source language <SL> (ISO3 code), the target language <TL> (ISO3 code) and the dataset <D>, produce the following files:
+    - the source-target GIZA++ input parallel file `<SL>-<TL>-<D>.parallel` (per line: <white_space_tokenized_source_sentence> ||| <white_space_tokenized_target_sentence>)
+    - the GIZA++ input configuration file `<SL>-<TL>-<D>.giza.config`. Use the config file `data/gizapp-sample.config`, and replace 'ENG' by <SL>, 'AFR' by <TL> and 'bible' by <D>.
+    - a key file of sentence IDs `<SL>-<TL>-<D>.keys`, one ID per line. The order of the IDs should correspond to the order of the sentences in `<SL>-<TL>-<D>.parallel`.
+- Run the `run_gizapp.sh` script to train and produce the alignments from the source to the target with the three parameters <SL>, <TL> and <D>. This will create a new directory `workspace/<SL>-<TL>-<D>-gfiles` with the necessary GIZA++ output files.
+- Run the `giza-convert.py` script to produce the forward alignments as follows: `python giza-convert.py workspace/<SL>-<TL>-<D>-gfiles/<SL>-<TL>.alignments N > workspace/<SL>-<TL>-<D>-giza.forward`
+- Repeat the second and their steps while switching <SL> and <TL> in order to produce the backward alignments.
+- Run the `giza-convert.py` script to produce the backward alignments as follows: `python giza-convert.py workspace/<TL>-<SL>-<D>-gfiles/<TL>-<SL>.alignments Y > workspace/<SL>-<TL>-<D>-giza.backward`
 
 ---
 
