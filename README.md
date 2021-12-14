@@ -60,7 +60,7 @@ The  script `projection_handler.py` is responsible for projecting the tags from 
 -  **tagged_source_path**: the path of the tagged source text
 -  **target_data_path**: the path of the target text, a tabular file that has one sentence per line, where the first tab has the sentence ID and the second tab has the white-space tokenized sentence.
 -  **pos_output_path**: the path of the projected annotations
--  **pos_output_path**: the path of the probabilities of the projected annotations
+-  **prob_output_path**: the path of the probabilities of the projected annotations
 
 In order to apply stem-based alignment and projection, run both alignment and projection in the stem space, and then replace the tagged stems by their corresponding words using the `map_word_stem.py` script.
 
