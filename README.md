@@ -23,14 +23,14 @@
 We use GIZA++ to train and produce word-level alignments between the target language and a source language for which POS annotations are available based on a parallel corpus that is white-space tokenized.
 
 - Create a directory `alignments` that has the `GIZA++` and `mkcls` installation directories, in addition to the `run_gizapp.sh` and `giza-convert.py` scripts and a `workspace` directory to store the inputs and outputs.
-- For the source language <SL> (ISO3 code), the target language <TL> (ISO3 code) and the dataset <D>, produce the following files:
-    - the source-target GIZA++ input parallel file `<SL>-<TL>-<D>.parallel` (per line: <white_space_tokenized_source_sentence> ||| <white_space_tokenized_target_sentence>)
-    - the GIZA++ input configuration file `<SL>-<TL>-<D>.giza.config`. Use the config file `data/gizapp-sample.config`, and replace 'ENG' by <SL>, 'AFR' by <TL> and 'bible' by <D>.
-    - a key file of sentence IDs `<SL>-<TL>-<D>.keys`, one ID per line. The order of the IDs should correspond to the order of the sentences in `<SL>-<TL>-<D>.parallel`.
-- Run the `run_gizapp.sh` script to train and produce the alignments from the source to the target with the three parameters <SL>, <TL> and <D>. This will create a new directory `workspace/<SL>-<TL>-<D>-gfiles` with the necessary GIZA++ output files.
-- Run the `giza-convert.py` script to produce the forward alignments as follows: `python giza-convert.py workspace/<SL>-<TL>-<D>-gfiles/<SL>-<TL>.alignments N > workspace/<SL>-<TL>-<D>-giza.forward`
-- Repeat the second and their steps while switching <SL> and <TL> in order to produce the backward alignments.
-- Run the `giza-convert.py` script to produce the backward alignments as follows: `python giza-convert.py workspace/<TL>-<SL>-<D>-gfiles/<TL>-<SL>.alignments Y > workspace/<SL>-<TL>-<D>-giza.backward`
+- For the source language \<SL\> (ISO3 code), the target language \<TL\> (ISO3 code) and the dataset <D>, produce the following files:
+    - the source-target GIZA++ input parallel file `\<SL\>-\<TL\>-<D>.parallel` (per line: <white_space_tokenized_source_sentence> ||| <white_space_tokenized_target_sentence>)
+    - the GIZA++ input configuration file `\<SL\>-\<TL\>-<D>.giza.config`. Use the config file `data/gizapp-sample.config`, and replace 'ENG' by \<SL\>, 'AFR' by \<TL\> and 'bible' by <D>.
+    - a key file of sentence IDs `\<SL\>-\<TL\>-<D>.keys`, one ID per line. The order of the IDs should correspond to the order of the sentences in `\<SL\>-\<TL\>-<D>.parallel`.
+- Run the `run_gizapp.sh` script to train and produce the alignments from the source to the target with the three parameters \<SL\>, \<TL\> and <D>. This will create a new directory `workspace/\<SL\>-\<TL\>-<D>-gfiles` with the necessary GIZA++ output files.
+- Run the `giza-convert.py` script to produce the forward alignments as follows: `python giza-convert.py workspace/\<SL\>-\<TL\>-<D>-gfiles/\<SL\>-\<TL\>.alignments N > workspace/\<SL\>-\<TL\>-<D>-giza.forward`
+- Repeat the second and their steps while switching \<SL\> and \<TL\> in order to produce the backward alignments.
+- Run the `giza-convert.py` script to produce the backward alignments as follows: `python giza-convert.py workspace/\<TL\>-\<SL\>-<D>-gfiles/\<TL\>-\<SL\>.alignments Y > workspace/\<SL\>-\<TL\>-<D>-giza.backward`
 
 ---
 
@@ -49,14 +49,14 @@ The  script `projection_handler.py` is responsible for projecting the tags from 
 ##### Projection: projection_handler.py
 ##### Parameters
 -  **key_path**: alignments/workspace/\<SL\>-\<TL\>-<D>.keys
--  **forward_alignment_path**: alignments/workspace/<SL>-<TL>-<D>-giza.forward
--  **forward_source_vocabulary_path**: alignments/workspace/<SL>-<TL>-<D>-gfiles/<SL>-<TL>.vcb
--  **forward_target_vocabulary_path**: alignments/workspace/<SL>-<TL>-<D>-gfiles/<TL>-<SL>.vcb
--  **forward_alignment_probability_path**: alignments/workspace/<SL>-<TL>-<D>-gfiles/g.t3.final
--  **backward_alignment_path**: alignments/workspace/<SL>-<TL>-<D>-giza.backward
--  **backward_source_vocabulary_path**: alignments/workspace/<TL>-<SL>-<D>-gfiles/<SL>-<TL>.vcb
--  **backward_target_vocabulary_path**: alignments/workspace/<TL>-<SL>-<D>-gfiles/<TL>-<SL>.vcb
--  **backward_alignment_probability_path**: alignments/workspace/<TL>-<SL>-<D>-gfiles/g.t3.final
+-  **forward_alignment_path**: alignments/workspace/\<SL\>-\<TL\>-<D>-giza.forward
+-  **forward_source_vocabulary_path**: alignments/workspace/\<SL\>-\<TL\>-<D>-gfiles/\<SL\>-\<TL\>.vcb
+-  **forward_target_vocabulary_path**: alignments/workspace/\<SL\>-\<TL\>-<D>-gfiles/\<TL\>-\<SL\>.vcb
+-  **forward_alignment_probability_path**: alignments/workspace/\<SL\>-\<TL\>-<D>-gfiles/g.t3.final
+-  **backward_alignment_path**: alignments/workspace/\<SL\>-\<TL\>-<D>-giza.backward
+-  **backward_source_vocabulary_path**: alignments/workspace/\<TL\>-\<SL\>-<D>-gfiles/\<SL\>-\<TL\>.vcb
+-  **backward_target_vocabulary_path**: alignments/workspace/\<TL\>-\<SL\>-<D>-gfiles/\<TL\>-\<SL\>.vcb
+-  **backward_alignment_probability_path**: alignments/workspace/\<TL\>-\<SL\>-<D>-gfiles/g.t3.final
 -  **tagged_source_path**: the path of the tagged source text
 -  **target_data_path**: the path of the target text, a tabular file that has one sentence per line, where the first tab has the sentence ID and the second tab has the white-space tokenized sentence.
 -  **pos_output_path**: the path of the projected annotations
@@ -175,8 +175,8 @@ The script `multi_source_decoding.py` is responsible for combining decoded outpu
 -  **pos_path**: the path of the decoded POS annotations (as produced by `tagger.py` - only used with inference-based weights). It is a wildcard path in which the source language is be replaced by '#SOURCE_LANG#'.
 -  **prob_path**: the path of the probabilities of the decoded POS annotations (as produced by `tagger.py` - only used with inference-based weights). It is a wildcard path in which the source language is be replaced by '#SOURCE_LANG#'.
 -  **training_path**: the path of the training files (as produced by `training_data_generator.py` - only used for statistics). It is a wildcard path in which the source language is be replaced by '#SOURCE_LANG#'.
--  **forward_alignment_path**: alignments/workspace/<SL>-<TL>-<D>-giza.forward - only used with alignment-based weights. It is a wildcard path in which the source language is be replaced by '#SOURCE_LANG#'.
--  **backward_alignment_path**: alignments/workspace/<SL>-<TL>-<D>-giza.backward - only used with alignment-based weights. It is a wildcard path in which the source language is be replaced by '#SOURCE_LANG#'.
+-  **forward_alignment_path**: alignments/workspace/\<SL\>-\<TL\>-<D>-giza.forward - only used with alignment-based weights. It is a wildcard path in which the source language is be replaced by '#SOURCE_LANG#'.
+-  **backward_alignment_path**: alignments/workspace/\<SL\>-\<TL\>-<D>-giza.backward - only used with alignment-based weights. It is a wildcard path in which the source language is be replaced by '#SOURCE_LANG#'.
 -  **gold_sets**: the name of the gold/test dataset (for evaluation purpose)
 -  **pos_output_file**: the path of the gold file (for evaluation purpose)
 -  **pos_output_file**: the path of the output combined POS tags
