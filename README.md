@@ -64,6 +64,7 @@ The  script `projection_handler.py` is responsible for projecting the tags from 
 
 In order to apply stem-based alignment and projection, run both alignment and projection in the stem space, and then replace the tagged stems by their corresponding words using the `map_word_stem.py` script.
 
+<!---
 ##### Stem-based Processing: map_word_stem.py
 ##### Parameters
 -  **source_data_path**: the path of the source text, a tabular file that has one sentence per line, where the first tab has the sentence ID and the second tab has the white-space tokenized sentence.
@@ -80,7 +81,8 @@ In order to apply morpheme-based alignment and projection, run both alignment an
 -  **stem_path**: the path of the source text where the stems are marked by '+' e.g., 're+play+s' or '+make+'. This is needed in the STEM mechanism for the selection of the representative morpheme. If set to 'NA', the RANK mechanism is used instead.
 -  **pos_output_path**: the path of the output annotations in which the morphemes are replaced by their corresponding words
 -  **prob_output_path**: the path of the probabilities of the output annotations
-
+--->
+     
 The  script `multi_source_projection.py` is responsible for multi-source projection.
 
 ##### Multi-Source Projection: multi_source_projection.py
