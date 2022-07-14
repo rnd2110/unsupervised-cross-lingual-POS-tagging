@@ -5,6 +5,7 @@
 ### Publications
 
 - [Unsupervised Cross-Lingual Part-of-Speech Tagging for Truly Low-Resource Scenarios](https://www.aclweb.org/anthology/2020.emnlp-main.391.pdf "Unsupervised Cross-Lingual Part-of-Speech Tagging for Truly Low-Resource Scenarios")
+- [Unsupervised Stem-based Cross-lingual Part-of-Speech Tagging for Morphologically Rich Low-Resource Languages](https://openreview.net/pdf?id=BCllhVQGBZ9 "Unsupervised Stem-based Cross-lingual Part-of-Speech Tagging for Morphologically Rich Low-Resource Languages")
 
 ---
 
